@@ -48,11 +48,11 @@
         <h2>SDP to send:</h2>
         <div>
           <textarea
-            id="text_for_send_sdp"
+            id="text_for_sending_sdp"
             rows="8"
             cols="80"
             readonly="readonly"
-            x-model="textForSendSdp"
+            x-model="textForSendingSdp"
           ></textarea>
         </div>
       </div>
@@ -65,10 +65,10 @@
         <br />
         <div>
           <textarea
-            id="text_for_receive_sdp"
+            id="text_for_receiving_sdp"
             rows="8"
             cols="80"
-            x-model="textForReceiveSdp"
+            x-model="textForReceivingSdp"
           ></textarea>
         </div>
       </div>
@@ -77,8 +77,8 @@
     <script>
       function app() {
         return {
-          textForSendSdp: "SDP to send",
-          textForReceiveSdp: "",
+          textForSendingSdp: "SDP to send",
+          textForReceivingSdp: "",
 
           localStream: null,
 
