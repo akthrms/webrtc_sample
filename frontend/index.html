@@ -80,25 +80,91 @@
           textForSendingSdp: "SDP to send",
           textForReceivingSdp: "",
 
-          localStream: null,
+          localMediaStream: null,
+          rtcPeerConnection: null,
+          negotiationNeededCounter: 0,
 
           async startVideo() {
             try {
-              this.localStream =
+              this.localMediaStream =
                 await window.navigator.mediaDevices.getUserMedia({
                   video: true,
                   audio: false,
                 });
-              await this.playVideo(this.$refs.localVideo, this.localStream);
+              await this.playVideo(
+                this.$refs.localVideo,
+                this.localMediaStream
+              );
             } catch (e) {
               console.error(e);
             }
           },
 
-          async playVideo(video, stream) {
+          async playVideo(video, mediaStream) {
             try {
-              video.srcObject = stream;
+              video.srcObject = mediaStream;
               await video.play();
+            } catch (e) {
+              console.error(e);
+            }
+          },
+
+          prepareNewConnection(isOffer) {
+            const rtcPeerConnection = new RTCPeerConnection({
+              iceServers: [{ urls: "stun:stun.webrtc.ecl.ntt.com:3478" }],
+            });
+
+            rtcPeerConnection.ontrack((event) => {
+              this.playVideo(this.$refs.removeVideo, event.streams[0]);
+            });
+
+            rtcPeerConnection.onicecandidate((event) => {
+              if (!event.candidate) {
+                this.sendSdp(rtcPeerConnection.localDescription);
+              }
+            });
+
+            rtcPeerConnection.onnegotiationneeded = async () => {
+              try {
+                if (isOffer && this.negotiationNeededCounter === 0) {
+                  let offer = rtcPeerConnection.createOffer();
+                  await rtcPeerConnection.setLocalDescription(offer);
+                  this.sendSdp(rtcPeerConnection.localDescription);
+                  this.negotiationNeededCounter++;
+                }
+              } catch (e) {
+                console.log(e);
+              }
+            };
+
+            if (this.localMediaStream) {
+              this.localMediaStream.getTracks().forEach((track) => {
+                rtcPeerConnection.addTrack(track, this.localMediaStream);
+              });
+            }
+
+            return rtcPeerConnection;
+          },
+
+          sendSdp(rtcSessionDescription) {
+            this.textForSendingSdp = rtcSessionDescription.sdp;
+          },
+
+          connect() {
+            if (!this.rtcPeerConnection) {
+              this.rtcPeerConnection = this.prepareNewConnection(true);
+            }
+          },
+
+          async makeAnswer() {
+            if (!this.rtcPeerConnection) {
+              return;
+            }
+
+            try {
+              let answer = await this.rtcPeerConnection.createAnswer();
+              await this.rtcPeerConnection.setLocalDescription(offer);
+              this.sendSdp(this.rtcPeerConnection.localDescription);
             } catch (e) {
               console.error(e);
             }
