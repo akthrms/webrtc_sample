@@ -163,7 +163,7 @@
 
             try {
               let answer = await this.rtcPeerConnection.createAnswer();
-              await this.rtcPeerConnection.setLocalDescription(offer);
+              await this.rtcPeerConnection.setLocalDescription(answer);
               this.sendSdp(this.rtcPeerConnection.localDescription);
             } catch (e) {
               console.error(e);
