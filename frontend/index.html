@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>WebRTC Sample</title>
+
+    <style>
+      .center {
+        text-align: center;
+        margin: 0 auto;
+      }
+    </style>
+
+    <script
+      src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+      defer
+    ></script>
+  </head>
+
+  <body>
+    <div class="center">
+      <h1>WebRTC Sample</h1>
+
+      <div>
+        <div>
+          <button type="button">Start Video</button>
+          <button type="button">Connect</button>
+          <button type="button">Hang Up</button>
+        </div>
+        <br />
+        <div>
+          <video
+            id="local_video"
+            autoplay
+            style="width: 240px; height: 180px; border: 1px solid black"
+          ></video>
+          <video
+            id="remote_video"
+            autoplay
+            style="width: 240px; height: 180px; border: 1px solid black"
+          ></video>
+        </div>
+      </div>
+
+      <div>
+        <h2>SDP to send:</h2>
+        <div>
+          <textarea
+            id="text_for_send_sdp"
+            rows="8"
+            cols="80"
+            readonly="readonly"
+          ></textarea>
+        </div>
+      </div>
+
+      <div>
+        <h2>SDP to receive:</h2>
+        <div>
+          <button type="button">Receive remote SDP</button>
+        </div>
+        <br />
+        <div>
+          <textarea id="text_for_receive_sdp" rows="8" cols="80"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const localVideo = document.getElementById("local_video");
+      const remoteVideo = document.getElementById("remote_video");
+      const textForSendSDP = document.getElementById("text_for_send_sdp");
+      const textForReceiveSDP = document.getElementById("text_for_receive_sdp");
+    </script>
+  </body>
+</html>
