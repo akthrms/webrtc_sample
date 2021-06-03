@@ -18,12 +18,12 @@
   </head>
 
   <body>
-    <div class="center">
+    <div class="center" x-data="app()">
       <h1>WebRTC Sample</h1>
 
       <div>
         <div>
-          <button type="button">Start Video</button>
+          <button type="button" x-on:click="startVideo()">Start Video</button>
           <button type="button">Connect</button>
           <button type="button">Hang Up</button>
         </div>
@@ -33,11 +33,13 @@
             id="local_video"
             autoplay
             style="width: 240px; height: 180px; border: 1px solid black"
+            x-ref="localVideo"
           ></video>
           <video
             id="remote_video"
             autoplay
             style="width: 240px; height: 180px; border: 1px solid black"
+            x-ref="remoteVideo"
           ></video>
         </div>
       </div>
@@ -50,6 +52,7 @@
             rows="8"
             cols="80"
             readonly="readonly"
+            x-model="textForSendSDP"
           ></textarea>
         </div>
       </div>
@@ -61,16 +64,47 @@
         </div>
         <br />
         <div>
-          <textarea id="text_for_receive_sdp" rows="8" cols="80"></textarea>
+          <textarea
+            id="text_for_receive_sdp"
+            rows="8"
+            cols="80"
+            x-model="textForReceiveSDP"
+          ></textarea>
         </div>
       </div>
     </div>
 
     <script>
-      const localVideo = document.getElementById("local_video");
-      const remoteVideo = document.getElementById("remote_video");
-      const textForSendSDP = document.getElementById("text_for_send_sdp");
-      const textForReceiveSDP = document.getElementById("text_for_receive_sdp");
+      function app() {
+        return {
+          textForSendSDP: "SDP to send",
+          textForReceiveSDP: "",
+
+          localStream: null,
+
+          async startVideo() {
+            try {
+              this.localStream =
+                await window.navigator.mediaDevices.getUserMedia({
+                  video: true,
+                  audio: false,
+                });
+              await this.playVideo(this.$refs.localVideo, this.localStream);
+            } catch (e) {
+              console.error(e);
+            }
+          },
+
+          async playVideo(video, stream) {
+            try {
+              video.srcObject = stream;
+              await video.play();
+            } catch (e) {
+              console.error(e);
+            }
+          },
+        };
+      }
     </script>
   </body>
 </html>
