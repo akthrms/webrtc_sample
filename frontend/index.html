@@ -25,7 +25,7 @@
         <div>
           <button type="button" x-on:click="startVideo()">Start Video</button>
           <button type="button" x-on:click="connect()">Connect</button>
-          <button type="button">Hang Up</button>
+          <button type="button" x-on:click="hangUp()">Hang Up</button>
         </div>
         <br />
         <div>
@@ -124,6 +124,16 @@
               }
             };
 
+            rtcPeerConnection.oniceconnectionstatechange = () => {
+              switch (rtcPeerConnection.iceConnectionState) {
+                case "closed":
+                case "failed":
+                  if (this.rtcPeerConnection) {
+                    this.hangUp();
+                  }
+              }
+            };
+
             if (this.localMediaStream) {
               this.localMediaStream.getTracks().forEach((track) => {
                 rtcPeerConnection.addTrack(track, this.localMediaStream);
@@ -187,6 +197,24 @@
             await this.rtcPeerConnection.setRemoteDescription(
               rtcSessionDescription
             );
+          },
+
+          hangUp() {
+            if (
+              this.rtcPeerConnection &&
+              this.rtcPeerConnection.iceConnectionState !== "closed"
+            ) {
+              this.rtcPeerConnection.close();
+              this.rtcPeerConnection = null;
+              this.negotiationNeededCounter = 0;
+              this.cleanVideo(this.$refs.remoteVideo);
+              this.textForSendingSdp = "";
+            }
+          },
+
+          cleanVideo(video) {
+            video.pause();
+            video.srcObject = null;
           },
         };
       }
