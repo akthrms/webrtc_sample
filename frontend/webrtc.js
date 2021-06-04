@@ -1,6 +1,6 @@
 function app() {
   return {
-    textForSendingSdp: "SDP to send",
+    textForSendingSdp: "",
     textForReceivingSdp: "",
 
     mediaStream: null,
@@ -30,7 +30,7 @@ function app() {
       }
     },
 
-    prepareNewConnection(isOffer) {
+    newRtcPeerConnection(isOffer) {
       const rtcPeerConnection = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.webrtc.ecl.ntt.com:3478" }],
       });
@@ -45,7 +45,7 @@ function app() {
 
       rtcPeerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          this.sendCandidate(event.candidate);
+          this.sendRtcIceCandidate(event.candidate);
         }
       };
 
@@ -89,7 +89,7 @@ function app() {
 
     connect() {
       if (!this.rtcPeerConnection) {
-        this.rtcPeerConnection = this.prepareNewConnection(true);
+        this.rtcPeerConnection = this.newRtcPeerConnection(true);
       }
     },
 
@@ -106,14 +106,16 @@ function app() {
     },
 
     async setOffer(rtcSessionDescription) {
-      try {
-        this.rtcPeerConnection = this.prepareNewConnection(false);
-        await this.rtcPeerConnection.setRemoteDescription(
-          rtcSessionDescription
-        );
-        await this.makeAnswer();
-      } catch (e) {
-        console.log(e);
+      if (!this.rtcPeerConnection) {
+        try {
+          this.rtcPeerConnection = this.newRtcPeerConnection(false);
+          await this.rtcPeerConnection.setRemoteDescription(
+            rtcSessionDescription
+          );
+          await this.makeAnswer();
+        } catch (e) {
+          console.log(e);
+        }
       }
     },
 
@@ -134,22 +136,16 @@ function app() {
         this.rtcPeerConnection &&
         this.rtcPeerConnection.iceConnectionState !== "closed"
       ) {
+        this.$refs.remoteVideo.pause();
+        this.$refs.remoteVideo.srcObject = null;
+        this.textForSendingSdp = "";
+        this.textForReceivingSdp = "";
         this.rtcPeerConnection.close();
         this.rtcPeerConnection = null;
         this.isNegotiationNeeded = true;
-
         const message = JSON.stringify({ type: "close" });
         this.webSocket.send(message);
-
-        this.cleanVideo(this.$refs.remoteVideo);
-        this.textForSendingSdp = "";
-        this.textForReceivingSdp = "";
       }
-    },
-
-    cleanVideo(video) {
-      video.pause();
-      video.srcObject = null;
     },
 
     init() {
@@ -177,7 +173,7 @@ function app() {
             break;
           case "candidate":
             const candidate = new RTCIceCandidate(message.ice);
-            this.addCandidate(candidate);
+            this.addRtcIceCandidate(candidate);
             break;
           case "close":
             this.hangUp();
@@ -185,13 +181,13 @@ function app() {
       };
     },
 
-    addCandidate(rtcIceCandidate) {
+    addRtcIceCandidate(rtcIceCandidate) {
       if (this.rtcPeerConnection) {
         this.rtcPeerConnection.addIceCandidate(rtcIceCandidate);
       }
     },
 
-    sendCandidate(rtcIceCandidate) {
+    sendRtcIceCandidate(rtcIceCandidate) {
       const message = JSON.stringify({
         type: "candidate",
         ice: rtcIceCandidate,
