@@ -1,16 +1,16 @@
 "use strict";
 
 function log(message) {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hour = date.getHours();
-  const minute = date.getMinutes();
-  const second = date.getSeconds();
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const date = now.getDate();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const second = now.getSeconds();
 
   console.log(
-    `[${year}/${month}/${day} ${hour}:${minute}:${second}] ${message}`
+    `[${year}/${month}/${date} ${hour}:${minute}:${second}] ${message}`
   );
 }
 
