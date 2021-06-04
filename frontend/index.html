@@ -85,28 +85,17 @@
           negotiationNeededCounter: 0,
 
           async startVideo() {
-            try {
-              this.localMediaStream =
-                await window.navigator.mediaDevices.getUserMedia({
-                  video: true,
-                  audio: false,
-                });
-              await this.playVideo(
-                this.$refs.localVideo,
-                this.localMediaStream
-              );
-            } catch (e) {
-              console.error(e);
-            }
+            this.localMediaStream =
+              await window.navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false,
+              });
+            await this.playVideo(this.$refs.localVideo, this.localMediaStream);
           },
 
           async playVideo(video, mediaStream) {
-            try {
-              video.srcObject = mediaStream;
-              await video.play();
-            } catch (e) {
-              console.error(e);
-            }
+            video.srcObject = mediaStream;
+            await video.play();
           },
 
           prepareNewConnection(isOffer) {
@@ -125,15 +114,11 @@
             };
 
             rtcPeerConnection.onnegotiationneeded = async () => {
-              try {
-                if (isOffer && this.negotiationNeededCounter === 0) {
-                  let offer = rtcPeerConnection.createOffer();
-                  await rtcPeerConnection.setLocalDescription(offer);
-                  this.sendSdp(rtcPeerConnection.localDescription);
-                  this.negotiationNeededCounter++;
-                }
-              } catch (e) {
-                console.log(e);
+              if (isOffer && this.negotiationNeededCounter === 0) {
+                let offer = rtcPeerConnection.createOffer();
+                await rtcPeerConnection.setLocalDescription(offer);
+                this.sendSdp(rtcPeerConnection.localDescription);
+                this.negotiationNeededCounter++;
               }
             };
 
@@ -161,13 +146,9 @@
               return;
             }
 
-            try {
-              let answer = await this.rtcPeerConnection.createAnswer();
-              await this.rtcPeerConnection.setLocalDescription(answer);
-              this.sendSdp(this.rtcPeerConnection.localDescription);
-            } catch (e) {
-              console.error(e);
-            }
+            let answer = await this.rtcPeerConnection.createAnswer();
+            await this.rtcPeerConnection.setLocalDescription(answer);
+            this.sendSdp(this.rtcPeerConnection.localDescription);
           },
         };
       }
