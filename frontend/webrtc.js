@@ -106,16 +106,26 @@ function app() {
     },
 
     async setOffer(rtcSessionDescription) {
-      this.rtcPeerConnection = this.prepareNewConnection(false);
-      await this.rtcPeerConnection.setRemoteDescription(rtcSessionDescription);
-      await this.makeAnswer();
+      try {
+        this.rtcPeerConnection = this.prepareNewConnection(false);
+        await this.rtcPeerConnection.setRemoteDescription(
+          rtcSessionDescription
+        );
+        await this.makeAnswer();
+      } catch (e) {
+        console.log(e);
+      }
     },
 
     async setAnswer(rtcSessionDescription) {
       if (this.rtcPeerConnection) {
-        await this.rtcPeerConnection.setRemoteDescription(
-          rtcSessionDescription
-        );
+        try {
+          await this.rtcPeerConnection.setRemoteDescription(
+            rtcSessionDescription
+          );
+        } catch (e) {
+          console.log(e);
+        }
       }
     },
 
@@ -150,12 +160,20 @@ function app() {
         const message = JSON.parse(event.data);
         switch (message.type) {
           case "offer":
-            this.textForReceivingSdp = message.sdp;
-            await this.setOffer(message);
+            try {
+              this.textForReceivingSdp = message.sdp;
+              await this.setOffer(message);
+            } catch (e) {
+              console.error(e);
+            }
             break;
           case "answer":
-            this.textForReceivingSdp = message.sdp;
-            await this.setAnswer(message);
+            try {
+              this.textForReceivingSdp = message.sdp;
+              await this.setAnswer(message);
+            } catch (e) {
+              console.error(e);
+            }
             break;
           case "candidate":
             const candidate = new RTCIceCandidate(message.ice);
