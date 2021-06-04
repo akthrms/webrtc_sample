@@ -18,7 +18,7 @@
   </head>
 
   <body>
-    <div class="center" x-data="app()">
+    <div class="center" x-data="app()" x-init="init()">
       <h1>WebRTC Sample</h1>
 
       <div>
@@ -86,6 +86,8 @@
           rtcPeerConnection: null,
           negotiationNeededCounter: 0,
 
+          webSocket: null,
+
           async startVideo() {
             this.localMediaStream =
               await window.navigator.mediaDevices.getUserMedia({
@@ -110,8 +112,8 @@
             };
 
             rtcPeerConnection.onicecandidate = (event) => {
-              if (!event.candidate) {
-                this.sendSdp(rtcPeerConnection.localDescription);
+              if (event.candidate) {
+                this.sendCandidate(event.candidate);
               }
             };
 
@@ -145,6 +147,8 @@
 
           sendSdp(rtcSessionDescription) {
             this.textForSendingSdp = rtcSessionDescription.sdp;
+            const message = JSON.stringify(rtcSessionDescription);
+            this.webSocket.send(message);
           },
 
           connect() {
@@ -207,14 +211,58 @@
               this.rtcPeerConnection.close();
               this.rtcPeerConnection = null;
               this.negotiationNeededCounter = 0;
+
+              const message = JSON.stringify({ type: "close" });
+              this.webSocket.send(message);
+
               this.cleanVideo(this.$refs.remoteVideo);
               this.textForSendingSdp = "";
+              this.textForReceivingSdp = "";
             }
           },
 
           cleanVideo(video) {
             video.pause();
             video.srcObject = null;
+          },
+
+          init() {
+            const webSocketUrl = "ws://localhost:3001";
+            this.webSocket = new WebSocket(webSocketUrl);
+
+            this.webSocket.onmessage = (event) => {
+              const message = JSON.parse(event.data);
+              switch (message.type) {
+                case "offer":
+                  this.textForReceivingSdp = message.sdp;
+                  this.setOffer(message);
+                  break;
+                case "answer":
+                  this.textForReceivingSdp = message.sdp;
+                  this.setAnswer(message);
+                  break;
+                case "candidate":
+                  const candidate = new RTCIceCandidate(message.ice);
+                  this.addCandidate(candidate);
+                  break;
+                case "close":
+                  this.hangUp();
+              }
+            };
+          },
+
+          addCandidate(rtcIceCandidate) {
+            if (this.rtcPeerConnection) {
+              this.rtcPeerConnection.addIceCandidate(rtcIceCandidate);
+            }
+          },
+
+          sendCandidate(rtcIceCandidate) {
+            const message = JSON.stringify({
+              type: "candidate",
+              ice: rtcIceCandidate,
+            });
+            this.webSocket.send(message);
           },
         };
       }
