@@ -24,7 +24,7 @@
       <div>
         <div>
           <button type="button" x-on:click="startVideo()">Start Video</button>
-          <button type="button">Connect</button>
+          <button type="button" x-on:click="connect()">Connect</button>
           <button type="button">Hang Up</button>
         </div>
         <br />
@@ -60,7 +60,9 @@
       <div>
         <h2>SDP to receive:</h2>
         <div>
-          <button type="button">Receive remote SDP</button>
+          <button type="button" x-on:click="onSdpText()">
+            Receive remote SDP
+          </button>
         </div>
         <br />
         <div>
@@ -104,7 +106,7 @@
             });
 
             rtcPeerConnection.ontrack = (event) => {
-              this.playVideo(this.$refs.removeVideo, event.streams[0]);
+              this.playVideo(this.$refs.remoteVideo, event.streams[0]);
             };
 
             rtcPeerConnection.onicecandidate = (event) => {
@@ -149,6 +151,42 @@
             let answer = await this.rtcPeerConnection.createAnswer();
             await this.rtcPeerConnection.setLocalDescription(answer);
             this.sendSdp(this.rtcPeerConnection.localDescription);
+          },
+
+          onSdpText() {
+            if (this.rtcPeerConnection) {
+              const answer = new RTCSessionDescription({
+                type: "answer",
+                sdp: this.textForReceivingSdp,
+              });
+              this.setAnswer(answer);
+            } else {
+              const offer = new RTCSessionDescription({
+                type: "offer",
+                sdp: this.textForReceivingSdp,
+              });
+              this.setOffer(offer);
+            }
+
+            this.textForReceivingSdp = "";
+          },
+
+          async setOffer(rtcSessionDescription) {
+            this.rtcPeerConnection = this.prepareNewConnection(false);
+            await this.rtcPeerConnection.setRemoteDescription(
+              rtcSessionDescription
+            );
+            await this.makeAnswer();
+          },
+
+          async setAnswer(rtcSessionDescription) {
+            if (!this.rtcPeerConnection) {
+              return;
+            }
+
+            await this.rtcPeerConnection.setRemoteDescription(
+              rtcSessionDescription
+            );
           },
         };
       }
