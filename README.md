@@ -1,5 +1,18 @@
 # WebRTC Sample
 
+シグナリングサーバーを経由して、P2P 接続します
+
+## 使い方
+
+1. サーバーを起動する
+
+```sh
+$ npm install
+$ node ./backend/signaling.js
+```
+
+2. `./frontend/index.html` をブラウザで開く
+
 ## 画面イメージ
 
 ![](./image.png)
