@@ -1,15 +1,38 @@
 function app() {
   return {
+    /**
+     * @type {string}
+     */
     textForSendingSdp: "",
+
+    /**
+     * @type {string}
+     */
     textForReceivingSdp: "",
 
+    /**
+     * @type {MediaStream|null}
+     */
     mediaStream: null,
+
+    /**
+     * @type {RTCPeerConnection|null}
+     */
     rtcPeerConnection: null,
+
+    /**
+     * @type {boolean}
+     */
     isNegotiationNeeded: true,
 
+    /**
+     * @type {WebSocket|null}
+     */
     webSocket: null,
 
-    // ビデオを開始する
+    /**
+     * ビデオを開始する
+     */
     async startVideo() {
       try {
         this.mediaStream = await window.navigator.mediaDevices.getUserMedia({
@@ -22,7 +45,12 @@ function app() {
       }
     },
 
-    // ビデオを接続する
+    /**
+     * ビデオを接続する
+     *
+     * @param {*} video
+     * @param {MediaStream} mediaStream
+     */
     async playVideo(video, mediaStream) {
       try {
         video.srcObject = mediaStream;
@@ -32,7 +60,12 @@ function app() {
       }
     },
 
-    // コネクションを作成する
+    /**
+     * コネクションを作成する
+     *
+     * @param {boolean} isOffer
+     * @returns {RTCPeerConnection}
+     */
     newRtcPeerConnection(isOffer) {
       const rtcPeerConnection = new RTCPeerConnection({
         // STUN サーバーを設定する
@@ -91,21 +124,29 @@ function app() {
       return rtcPeerConnection;
     },
 
-    // SDP を送信する
+    /**
+     * SDP を送信する
+     *
+     * @param {RTCSessionDescription} rtcSessionDescription
+     */
     sendSdp(rtcSessionDescription) {
       this.textForSendingSdp = rtcSessionDescription.sdp;
       const message = JSON.stringify(rtcSessionDescription);
       this.webSocket.send(message);
     },
 
-    // Offer 処理を開始する
+    /**
+     * Offer 処理を開始する
+     */
     connect() {
       if (!this.rtcPeerConnection) {
         this.rtcPeerConnection = this.newRtcPeerConnection(true);
       }
     },
 
-    // Answer 処理を開始する
+    /**
+     * Answer 処理を開始する
+     */
     async makeAnswer() {
       if (this.rtcPeerConnection) {
         try {
@@ -118,7 +159,11 @@ function app() {
       }
     },
 
-    // Offer 側の SDP を設定する
+    /**
+     * Offer 側の SDP を設定する
+     *
+     * @param {RTCSessionDescription} rtcSessionDescription
+     */
     async setOffer(rtcSessionDescription) {
       if (!this.rtcPeerConnection) {
         try {
@@ -133,7 +178,11 @@ function app() {
       }
     },
 
-    // Answer 側の SDP を設定する
+    /**
+     * Answer 側の SDP を設定する
+     *
+     * @param {RTCSessionDescription} rtcSessionDescription
+     */
     async setAnswer(rtcSessionDescription) {
       if (this.rtcPeerConnection) {
         try {
@@ -146,7 +195,9 @@ function app() {
       }
     },
 
-    // P2P 接続を切断する
+    /**
+     * P2P 接続を切断する
+     */
     hangUp() {
       if (
         this.rtcPeerConnection &&
@@ -168,7 +219,9 @@ function app() {
       }
     },
 
-    // 初期処理
+    /**
+     * 初期処理
+     */
     init() {
       // シグナリングサーバーに接続する
       this.webSocket = new WebSocket("ws://localhost:3001");
@@ -203,14 +256,22 @@ function app() {
       };
     },
 
-    // ICE Candidate を追加する
+    /**
+     * ICE Candidate を追加する
+     *
+     * @param {RTCIceCandidate} rtcIceCandidate
+     */
     addRtcIceCandidate(rtcIceCandidate) {
       if (this.rtcPeerConnection) {
         this.rtcPeerConnection.addIceCandidate(rtcIceCandidate);
       }
     },
 
-    // ICE Candidate を送信する
+    /**
+     * ICE Candidate を送信する
+     *
+     * @param {RTCIceCandidate} rtcIceCandidate
+     */
     sendRtcIceCandidate(rtcIceCandidate) {
       const message = JSON.stringify({
         type: "candidate",
