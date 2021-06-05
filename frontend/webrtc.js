@@ -9,6 +9,7 @@ function app() {
 
     webSocket: null,
 
+    // ビデオを開始する
     async startVideo() {
       try {
         this.mediaStream = await window.navigator.mediaDevices.getUserMedia({
@@ -21,6 +22,7 @@ function app() {
       }
     },
 
+    // ビデオを接続する
     async playVideo(video, mediaStream) {
       try {
         video.srcObject = mediaStream;
@@ -30,12 +32,15 @@ function app() {
       }
     },
 
+    // コネクションを作成する
     newRtcPeerConnection(isOffer) {
       const rtcPeerConnection = new RTCPeerConnection({
+        // STUN サーバーを設定する
         iceServers: [{ urls: "stun:stun.webrtc.ecl.ntt.com:3478" }],
       });
 
       rtcPeerConnection.ontrack = async (event) => {
+        // リモートの MediaStreamTrack を受信した場合
         try {
           await this.playVideo(this.$refs.remoteVideo, event.streams[0]);
         } catch (e) {
@@ -44,12 +49,14 @@ function app() {
       };
 
       rtcPeerConnection.onicecandidate = (event) => {
+        // ICE Candidate を収集した場合
         if (event.candidate) {
           this.sendRtcIceCandidate(event.candidate);
         }
       };
 
       rtcPeerConnection.onnegotiationneeded = async () => {
+        // Offer 側でネゴシエーションを必要とする場合
         if (isOffer && this.isNegotiationNeeded) {
           try {
             let offer = rtcPeerConnection.createOffer();
@@ -63,16 +70,19 @@ function app() {
       };
 
       rtcPeerConnection.oniceconnectionstatechange = () => {
+        // ICE のステータスが変更された場合
         switch (rtcPeerConnection.iceConnectionState) {
           case "closed":
           case "failed":
             if (this.rtcPeerConnection) {
+              // 通信終了
               this.hangUp();
             }
         }
       };
 
       if (this.mediaStream) {
+        // ローカルの MediaStreamTrack を追加する
         this.mediaStream.getTracks().forEach((track) => {
           rtcPeerConnection.addTrack(track, this.mediaStream);
         });
@@ -81,18 +91,21 @@ function app() {
       return rtcPeerConnection;
     },
 
+    // SDP を送信する
     sendSdp(rtcSessionDescription) {
       this.textForSendingSdp = rtcSessionDescription.sdp;
       const message = JSON.stringify(rtcSessionDescription);
       this.webSocket.send(message);
     },
 
+    // Offer 処理を開始する
     connect() {
       if (!this.rtcPeerConnection) {
         this.rtcPeerConnection = this.newRtcPeerConnection(true);
       }
     },
 
+    // Answer 処理を開始する
     async makeAnswer() {
       if (this.rtcPeerConnection) {
         try {
@@ -105,6 +118,7 @@ function app() {
       }
     },
 
+    // Offer 側の SDP を設定する
     async setOffer(rtcSessionDescription) {
       if (!this.rtcPeerConnection) {
         try {
@@ -119,6 +133,7 @@ function app() {
       }
     },
 
+    // Answer 側の SDP を設定する
     async setAnswer(rtcSessionDescription) {
       if (this.rtcPeerConnection) {
         try {
@@ -131,6 +146,7 @@ function app() {
       }
     },
 
+    // P2P 接続を切断する
     hangUp() {
       if (
         this.rtcPeerConnection &&
@@ -140,19 +156,25 @@ function app() {
         this.$refs.remoteVideo.srcObject = null;
         this.textForSendingSdp = "";
         this.textForReceivingSdp = "";
+
+        // コネクションを切断する
         this.rtcPeerConnection.close();
         this.rtcPeerConnection = null;
         this.isNegotiationNeeded = true;
+
+        // リモートを切断する
         const message = JSON.stringify({ type: "close" });
         this.webSocket.send(message);
       }
     },
 
+    // 初期処理
     init() {
-      const webSocketUrl = "ws://localhost:3001";
-      this.webSocket = new WebSocket(webSocketUrl);
+      // シグナリングサーバーに接続する
+      this.webSocket = new WebSocket("ws://localhost:3001");
 
       this.webSocket.onmessage = async (event) => {
+        // シグナリングサーバーからメッセージを受信した場合
         const message = JSON.parse(event.data);
         switch (message.type) {
           case "offer":
@@ -181,12 +203,14 @@ function app() {
       };
     },
 
+    // ICE Candidate を追加する
     addRtcIceCandidate(rtcIceCandidate) {
       if (this.rtcPeerConnection) {
         this.rtcPeerConnection.addIceCandidate(rtcIceCandidate);
       }
     },
 
+    // ICE Candidate を送信する
     sendRtcIceCandidate(rtcIceCandidate) {
       const message = JSON.stringify({
         type: "candidate",
