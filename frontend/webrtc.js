@@ -147,7 +147,7 @@ function app() {
     /**
      * Answer 処理を開始する
      */
-    async makeAnswer() {
+    async answer() {
       if (this.rtcPeerConnection) {
         try {
           let answer = await this.rtcPeerConnection.createAnswer();
@@ -164,14 +164,13 @@ function app() {
      *
      * @param {RTCSessionDescription} rtcSessionDescription
      */
-    async setOffer(rtcSessionDescription) {
+    async setOfferSdp(rtcSessionDescription) {
       if (!this.rtcPeerConnection) {
         try {
           this.rtcPeerConnection = this.newRtcPeerConnection(false);
           await this.rtcPeerConnection.setRemoteDescription(
             rtcSessionDescription
           );
-          await this.makeAnswer();
         } catch (e) {
           console.log(e);
         }
@@ -183,7 +182,7 @@ function app() {
      *
      * @param {RTCSessionDescription} rtcSessionDescription
      */
-    async setAnswer(rtcSessionDescription) {
+    async setAnswerSdp(rtcSessionDescription) {
       if (this.rtcPeerConnection) {
         try {
           await this.rtcPeerConnection.setRemoteDescription(
@@ -233,7 +232,8 @@ function app() {
           case "offer":
             try {
               this.textForReceivingSdp = message.sdp;
-              await this.setOffer(message);
+              await this.setOfferSdp(message);
+              await this.answer();
             } catch (e) {
               console.error(e);
             }
@@ -241,7 +241,7 @@ function app() {
           case "answer":
             try {
               this.textForReceivingSdp = message.sdp;
-              await this.setAnswer(message);
+              await this.setAnswerSdp(message);
             } catch (e) {
               console.error(e);
             }
