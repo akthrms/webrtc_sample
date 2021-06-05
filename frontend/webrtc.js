@@ -48,7 +48,7 @@ function app() {
     /**
      * ビデオを接続する
      *
-     * @param {*} video
+     * @param {HTMLMediaElement} video
      * @param {MediaStream} mediaStream
      */
     async playVideo(video, mediaStream) {
@@ -247,8 +247,10 @@ function app() {
             }
             break;
           case "candidate":
-            const candidate = new RTCIceCandidate(message.ice);
-            this.addRtcIceCandidate(candidate);
+            const rtcIceCandidate = new RTCIceCandidate(
+              message.rtcIceCandidate
+            );
+            this.addRtcIceCandidate(rtcIceCandidate);
             break;
           case "close":
             this.hangUp();
@@ -275,7 +277,7 @@ function app() {
     sendRtcIceCandidate(rtcIceCandidate) {
       const message = JSON.stringify({
         type: "candidate",
-        ice: rtcIceCandidate,
+        rtcIceCandidate: rtcIceCandidate,
       });
       this.webSocket.send(message);
     },
