@@ -1,3 +1,10 @@
+"use strict";
+
+/**
+ * App
+ *
+ * @returns {*}
+ */
 function app() {
   return {
     /**
