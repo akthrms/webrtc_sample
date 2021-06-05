@@ -160,11 +160,11 @@ function app() {
     },
 
     /**
-     * Offer 側の SDP を設定する
+     * Answer 側に Offer 側の SDP を設定する
      *
      * @param {RTCSessionDescription} rtcSessionDescription
      */
-    async setOfferSdp(rtcSessionDescription) {
+    async setOfferSdpToAnswer(rtcSessionDescription) {
       if (!this.rtcPeerConnection) {
         try {
           this.rtcPeerConnection = this.newRtcPeerConnection(false);
@@ -178,11 +178,11 @@ function app() {
     },
 
     /**
-     * Answer 側の SDP を設定する
+     * Offer 側に Answer 側の SDP を設定する
      *
      * @param {RTCSessionDescription} rtcSessionDescription
      */
-    async setAnswerSdp(rtcSessionDescription) {
+    async setAnswerSdpToOffer(rtcSessionDescription) {
       if (this.rtcPeerConnection) {
         try {
           await this.rtcPeerConnection.setRemoteDescription(
@@ -232,7 +232,7 @@ function app() {
           case "offer":
             try {
               this.textForReceivingSdp = message.sdp;
-              await this.setOfferSdp(message);
+              await this.setOfferSdpToAnswer(message);
               await this.answer();
             } catch (e) {
               console.error(e);
@@ -241,7 +241,7 @@ function app() {
           case "answer":
             try {
               this.textForReceivingSdp = message.sdp;
-              await this.setAnswerSdp(message);
+              await this.setAnswerSdpToOffer(message);
             } catch (e) {
               console.error(e);
             }
